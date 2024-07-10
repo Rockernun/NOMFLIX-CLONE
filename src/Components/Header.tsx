@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { motion } from "framer-motion";
+import { motion, useAnimation, useScroll } from "framer-motion";
 import { Link, useRouteMatch } from "react-router-dom";
 
 //  헤더(네비게이션)
-const Nav = styled.nav`
+const Nav = styled(motion.nav)`
     width:100%;
     display:flex;
     justify-content:space-between;
     align-items:center;
     position:fixed;
     top:0;
-    background-color:black;
     height:80px;
     font-size:14px;
 `;
+
+const navVariants = {
+    top: {
+        backgroundColor:"rgba(0, 0, 0, 0)"
+    },
+    scroll: {
+        backgroundColor:"rgba(0, 0, 0, 1)"
+    }
+}
 
 //  Header의 2개의 열
 const Col = styled.div`
@@ -115,8 +123,23 @@ function Header() {
     const [searchOpen, setSearchOpen] = useState(false);
     const homeMatch = useRouteMatch("/");
     const tvMatch = useRouteMatch("/tv");
+    const { scrollY } = useScroll();
+    const navAnimation = useAnimation();
+    useEffect(() => {
+        scrollY.onChange(() => {
+            if (scrollY.get() > 80) {
+                navAnimation.start("scroll")
+            } else {
+                navAnimation.start("top")
+            }
+        });
+    }, [scrollY, navAnimation]);
     return (
-        <Nav>
+        <Nav
+        variants={navVariants}
+        initial={"top"}
+        animate={navAnimation}
+        >
             <Col>
                 <Logo 
                 variants={logoVariants}
