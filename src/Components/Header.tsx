@@ -1,3 +1,4 @@
+import { useState } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { Link, useRouteMatch } from "react-router-dom";
@@ -57,25 +58,43 @@ const logoVariants = {
 };
 
 //  검색창 컴포넌트
-const Search = styled.span`
-    margin-right:20px;
+const Search = styled(motion.span)`
+    display:flex;
+    position:relative;
+    align-items:center;
+    margin-right:40px;
     color:white;
     svg {
         height:25px;
     }
 `;
 
+const searchVariants = {
+    normal: {
+        scale:1,
+    },
+    click : {
+        scale:1.3,
+    }
+}
+
 //  현재 item 포인터(현재 route 표시)
-const Circle = styled.span`
+const Circle = styled(motion.span)`
     position: absolute;
     width:8px;
     height:8px;
     border-radius:4px;
-    bottom:-11px;
+    bottom:-15px;
     left:0;
     right:0;
     margin:0 auto;
     background-color:${(props) => props.theme.red};
+`;
+
+const Input = styled(motion.input)`
+    position:absolute;
+    transform-origin: right center;
+    left:-150px;
 `;
 
 //  Home, Tv Shows item 컴포넌트
@@ -93,6 +112,7 @@ const Item = styled.li`
 `;
 
 function Header() {
+    const [searchOpen, setSearchOpen] = useState(false);
     const homeMatch = useRouteMatch("/");
     const tvMatch = useRouteMatch("/tv");
     return (
@@ -111,16 +131,21 @@ function Header() {
                 </Logo>
                 <Items>
                     <Item>
-                        <Link to="/">Home {homeMatch?.isExact && <Circle />}</Link>
+                        <Link to="/">Home {homeMatch?.isExact && <Circle layoutId="pointer"/>}</Link>
                     </Item>
                     <Item>
-                        <Link to="/tv">TV Shows {tvMatch && <Circle />}</Link>
+                        <Link to="/tv">TV Shows {tvMatch && <Circle layoutId="pointer"/>}</Link>
                     </Item>
                 </Items>
             </Col>
             <Col>
-            <Search>
-          <svg
+            <Search 
+            variants={searchVariants}
+            animate={searchOpen ? "click" : "normal"}>
+          <motion.svg
+            onClick={() => setSearchOpen((prev) => !prev)}
+            animate={{x:searchOpen ? -180 : 0}}
+            transition={{type:"linear"}}
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
@@ -130,7 +155,12 @@ function Header() {
               d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
               clipRule="evenodd"
             ></path>
-          </svg>
+          </motion.svg>
+          <Input 
+          animate={{scaleX:searchOpen ? 1 : 0}} 
+          transition={{type:"linear"}}
+          placeholder="영화, 드라마, 애니 ..." 
+          />
         </Search>
             </Col>
         </Nav>
