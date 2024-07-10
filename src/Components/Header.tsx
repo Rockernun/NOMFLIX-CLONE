@@ -32,7 +32,7 @@ const Col = styled.div`
 
 //  로고(모션 추가)
 const Logo = styled(motion.svg)`
-    margin-left:20px;
+    margin-left:50px;
     width:95px;
     height:25px;
     fill: ${(props) => props.theme.red};
