@@ -30,34 +30,36 @@ const Col = styled.div`
     align-items:center;
 `;
 
-//  로고(모션 추가)
-const Logo = styled(motion.svg)`
-    margin-left:50px;
-    width:95px;
-    height:25px;
-    fill: ${(props) => props.theme.red};
-    path {
-        stroke-width: 6px;
-        stroke: white;
-    }
-`;
-
-
 //  Home, Tv Shows item 담아둘 컴포넌트
 const Items = styled.ul`
     display:flex;
     align-items:center;
 `;
 
+//  로고(모션 추가)
+const Logo = styled(motion.svg)`
+    margin-left:50px;
+    width:100px;
+    height:30px;
+    path {
+        stroke-width: 5px;
+        stroke: black;
+    }
+`;
 
 //  logoVariants 추가(두근두근)
 const logoVariants = {
     normal: {
+        fill:"rgba(255, 0, 0, 0)",
         scale:1,
-        fillOpacity:1,
+    },
+    drawing: {
+        fill: "rgba(255, 0, 0, 1)",
+        transition: {
+            duration:1.5,
+        }
     },
     active: {
-        fillOpacity: [0, 1, 0],
         scale:[1, 0.9, 0.8, 0.9, 1, 1.1, 1.2, 1.1, 1],
         transition: {
             repeat: Infinity,
@@ -123,17 +125,17 @@ function Header() {
     const [searchOpen, setSearchOpen] = useState(false);
     const homeMatch = useRouteMatch("/");
     const tvMatch = useRouteMatch("/tv");
-    const { scrollY } = useScroll();
+    const { scrollYProgress } = useScroll();
     const navAnimation = useAnimation();
     useEffect(() => {
-        scrollY.onChange(() => {
-            if (scrollY.get() > 80) {
+        scrollYProgress.onChange(() => {
+            if (scrollYProgress.get() > 0.15) {
                 navAnimation.start("scroll")
             } else {
                 navAnimation.start("top")
             }
         });
-    }, [scrollY, navAnimation]);
+    }, [scrollYProgress, navAnimation]);
     return (
         <Nav
         variants={navVariants}
@@ -144,6 +146,7 @@ function Header() {
                 <Logo 
                 variants={logoVariants}
                 initial="normal"
+                animate="drawing"
                 whileHover="active"
                 xmlns="http://www.w3.org/2000/svg"
                 width="1024"
@@ -180,6 +183,7 @@ function Header() {
             ></path>
           </motion.svg>
           <Input 
+          initial={false}
           animate={{scaleX:searchOpen ? 1 : 0}} 
           transition={{type:"linear"}}
           placeholder="영화, 드라마, 애니 ..." 
