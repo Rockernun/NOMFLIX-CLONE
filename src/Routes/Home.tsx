@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "react-query";
 import { getMovies, IGetMoviesResult } from "../api";
-import {styled} from "styled-components";
+import { styled } from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
 import { makeImagePath } from "../utils";
 
 const Wrapper = styled.div`
     background:black;
+    height:300vh;
 `;
 
 //  Loading State
@@ -28,6 +31,7 @@ const Banner = styled.div<{bgPhoto:string}>`
 
 //  First Movie Title
 const Title = styled.h2`
+    margin:0;
     color:white;
     font-size:68px;
 `;
@@ -39,19 +43,97 @@ const Overview = styled.p`
     width:50%;
 `;
 
+//  Movie Slider
+const Slider = styled(motion.div)`
+    position:relative;
+    top:-200px;
+`;
+
+//  Movie Slider Row(행)
+const SliderRow = styled(motion.div)`
+    display:grid;
+    gap:5px;
+    grid-template-columns:repeat(6, 1fr);
+    margin-bottom:5px;
+    position:absolute;
+    width:100%;
+`;
+
+//  Each Movie on Slider
+const SliderMovie = styled(motion.div)<{bgPhoto:string}>`
+    background-color:white;
+    background-image:url(${(props) => props.bgPhoto});
+    background-size:cover;
+    background-position:center center;
+    height:200px;
+    color:red;
+    font-size:64px;
+`;
+
+const rowVariants = {
+    hidden: {
+        x:window.outerWidth + 5,
+    },
+    visible: {
+        x:0,
+    },
+    exit: {
+        x:-window.outerWidth - 5,
+    }
+}
+
+//  한번에 보여줄 영화 개수
+const offset = 6;
+
 function Home() {
     const {data, isLoading} = useQuery<IGetMoviesResult>(["movies", "nowPlaying"], getMovies);
-    console.log(data, isLoading);
+    const [index, setIndex] = useState(0);
+    const [leaving, setLeaving] = useState(false);
+    const increaseIndex = () => {
+        if (data) {
+            if (leaving) return;
+            toggleLeaving();
+            const totalMovies = data?.results.length - 1;
+            const maxIndex = Math.floor(totalMovies / offset) - 1;
+            setIndex((prev) => prev === maxIndex ? 0 : prev + 1);
+        }
+    };
+    const toggleLeaving = () => setLeaving((prev) => !prev);
     return (
         <Wrapper>
             {isLoading ? (
             <Loader>Loading...</Loader>
         ) : (
         <>
-            <Banner bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}>
+            <Banner 
+            onClick={increaseIndex}
+            bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}>
                 <Title>{data?.results[0].title}</Title>
                 <Overview>{data?.results[0].overview}</Overview>
             </Banner>
+            <Slider>
+                <AnimatePresence 
+                initial={false}
+                onExitComplete={toggleLeaving}
+                >
+                    <SliderRow 
+                    key={index}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    transition={{type:"tween", duration:1}}
+                    >
+                        {data?.results.slice(1).slice(offset*index, offset*index+offset)
+                        .map((movie) => 
+                        <SliderMovie 
+                        key={movie.id}
+                        bgPhoto={makeImagePath(movie.backdrop_path, "w500")} 
+                        />
+                    )}
+                    </SliderRow>
+                </AnimatePresence>
+            </Slider>
         </>
         )}
         </Wrapper>
