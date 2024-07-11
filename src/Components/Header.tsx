@@ -13,6 +13,7 @@ const Nav = styled(motion.nav)`
     top:0;
     height:80px;
     font-size:14px;
+    z-index:1;
 `;
 
 const navVariants = {
@@ -129,7 +130,7 @@ function Header() {
     const navAnimation = useAnimation();
     useEffect(() => {
         scrollYProgress.onChange(() => {
-            if (scrollYProgress.get() > 0.15) {
+            if (scrollYProgress.get() > 0.1) {
                 navAnimation.start("scroll")
             } else {
                 navAnimation.start("top")

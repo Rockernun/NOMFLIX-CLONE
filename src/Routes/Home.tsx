@@ -7,7 +7,7 @@ import { makeImagePath } from "../utils";
 
 const Wrapper = styled.div`
     background:black;
-    height:300vh;
+    height:200vh;
 `;
 
 //  Loading State
@@ -19,13 +19,13 @@ const Loader = styled.div`
 `;
 
 //  First Movie(대형)
-const Banner = styled.div<{bgPhoto:string}>`
+const Banner = styled.div<{bgphoto:string}>`
     height:100vh;
     display:flex;
     flex-direction:column;
     justify-content:center;
     padding:50px;
-    background-image:linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), url(${(props) => props.bgPhoto});
+    background-image:linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), url(${(props) => props.bgphoto});
     background-size: cover;
 `;
 
@@ -60,9 +60,9 @@ const SliderRow = styled(motion.div)`
 `;
 
 //  Each Movie on Slider
-const SliderMovie = styled(motion.div)<{bgPhoto:string}>`
+const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     background-color:white;
-    background-image:url(${(props) => props.bgPhoto});
+    background-image:url(${(props) => props.bgphoto});
     background-size:cover;
     background-position:center center;
     height:200px;
@@ -107,7 +107,7 @@ function Home() {
         <>
             <Banner 
             onClick={increaseIndex}
-            bgPhoto={makeImagePath(data?.results[0].backdrop_path || "")}>
+            bgphoto={makeImagePath(data?.results[0].backdrop_path || "")}>
                 <Title>{data?.results[0].title}</Title>
                 <Overview>{data?.results[0].overview}</Overview>
             </Banner>
@@ -128,7 +128,7 @@ function Home() {
                         .map((movie) => 
                         <SliderMovie 
                         key={movie.id}
-                        bgPhoto={makeImagePath(movie.backdrop_path, "w500")} 
+                        bgphoto={makeImagePath(movie.backdrop_path, "w500")} 
                         />
                     )}
                     </SliderRow>
