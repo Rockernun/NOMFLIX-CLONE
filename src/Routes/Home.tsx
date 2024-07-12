@@ -39,7 +39,7 @@ const Title = styled.h2`
 //  First Movie Overview 
 const Overview = styled.p`
     color:white;
-    font-size:32px;
+    font-size:28px;
     width:50%;
 `;
 
@@ -68,6 +68,12 @@ const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     height:200px;
     color:red;
     font-size:64px;
+    &:first-child {
+        transform-origin:center left;
+    }
+    &:last-child {
+        transform-origin:center right;
+    }
 `;
 
 const rowVariants = {
@@ -79,6 +85,22 @@ const rowVariants = {
     },
     exit: {
         x:-window.outerWidth - 5,
+    }
+}
+
+const MovieVariants = {
+    normal:{
+        scale:1,
+
+    },
+    hover:{
+        scale:1.3,
+        y:-40,
+        transition:{
+            delay:0.3,
+            duration:0.3,
+            type:"tween",
+        }
     }
 }
 
@@ -128,6 +150,10 @@ function Home() {
                         .map((movie) => 
                         <SliderMovie 
                         key={movie.id}
+                        variants={MovieVariants}
+                        initial="normal"
+                        whileHover="hover"
+                        transition={{type:"tween"}}
                         bgphoto={makeImagePath(movie.backdrop_path, "w500")} 
                         />
                     )}
