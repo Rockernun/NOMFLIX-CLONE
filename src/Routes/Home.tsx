@@ -76,6 +76,44 @@ const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     }
 `;
 
+const MovieVariants = {
+    normal:{
+        scale:1,
+    },
+    hover:{
+        scale:1.3,
+        y:-40,
+        transition:{
+            delay:0.3,
+            duration:0.3,
+            type:"tween",
+        },
+    },
+};
+
+const SliderMovieInfo = styled(motion.div)`
+    background-color:${(props) => props.theme.black.lighter};
+    opacity:0;
+    position:absolute;
+    width:100%;
+    bottom:0;
+    h4 {
+        text-align:center;
+        font-size:14px;
+    }
+`;
+
+const MovieInfoVariants = {
+    hover: {
+        opacity:1,
+        transition: {
+            delay:0.3,
+            duration:0.3,
+            type:"tween,"
+        },
+    },
+} 
+
 const rowVariants = {
     hidden: {
         x:window.outerWidth + 5,
@@ -85,22 +123,6 @@ const rowVariants = {
     },
     exit: {
         x:-window.outerWidth - 5,
-    }
-}
-
-const MovieVariants = {
-    normal:{
-        scale:1,
-
-    },
-    hover:{
-        scale:1.3,
-        y:-40,
-        transition:{
-            delay:0.3,
-            duration:0.3,
-            type:"tween",
-        }
     }
 }
 
@@ -155,7 +177,13 @@ function Home() {
                         whileHover="hover"
                         transition={{type:"tween"}}
                         bgphoto={makeImagePath(movie.backdrop_path, "w500")} 
-                        />
+                        >
+                            <SliderMovieInfo
+                            variants={MovieInfoVariants}
+                            >
+                                <h4>{movie.title}</h4>    
+                            </SliderMovieInfo>    
+                        </SliderMovie>
                     )}
                     </SliderRow>
                 </AnimatePresence>
