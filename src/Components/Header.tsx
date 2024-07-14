@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion, useAnimation, useScroll } from "framer-motion";
-import { Link, useRouteMatch } from "react-router-dom";
+import { Link, useHistory, useRouteMatch } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 //  헤더(네비게이션)
 const Nav = styled(motion.nav)`
@@ -69,7 +70,7 @@ const logoVariants = {
 };
 
 //  검색창 컴포넌트
-const Search = styled(motion.span)`
+const Search = styled(motion.form)`
     display:flex;
     position:relative;
     align-items:center;
@@ -108,6 +109,10 @@ const Input = styled(motion.input)`
     left:-150px;
 `;
 
+interface IForm {
+    keyword:string;
+}
+
 //  Home, Tv Shows item 컴포넌트
 const Item = styled.li`
     margin-right:20px;
@@ -137,6 +142,11 @@ function Header() {
             }
         });
     }, [scrollYProgress, navAnimation]);
+    const history = useHistory();
+    const { register, handleSubmit } = useForm<IForm>();
+    const onValid = (data:IForm) => {
+        history.push(`/search?keyword=${data.keyword}`);
+    }
     return (
         <Nav
         variants={navVariants}
@@ -166,7 +176,7 @@ function Header() {
                 </Items>
             </Col>
             <Col>
-            <Search 
+            <Search onSubmit={handleSubmit(onValid)}
             variants={searchVariants}
             animate={searchOpen ? "click" : "normal"}>
           <motion.svg
@@ -184,6 +194,7 @@ function Header() {
             ></path>
           </motion.svg>
           <Input 
+          {...register("keyword", { required:true, minLength:2 })}
           initial={false}
           animate={{scaleX:searchOpen ? 1 : 0}} 
           transition={{type:"linear"}}
