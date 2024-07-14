@@ -54,7 +54,7 @@ const Slider = styled(motion.div)`
 const SliderRow = styled(motion.div)`
     display:grid;
     gap:5px;
-    grid-template-columns:repeat(6, 1fr);
+    grid-template-columns:repeat(5, 1fr);
     margin-bottom:5px;
     position:absolute;
     width:100%;
@@ -64,9 +64,9 @@ const SliderRow = styled(motion.div)`
 const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     background-color:white;
     background-image:url(${(props) => props.bgphoto});
-    background-size:cover;
-    background-position:center center;
-    height:200px;
+    background-size:contain;
+    background-position:center;
+    height:168px;
     color:red;
     font-size:64px;
     cursor:pointer; 
@@ -76,6 +76,16 @@ const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     &:last-child {
         transform-origin:center right;
     }
+`;
+
+//  Overlay Movie
+const OverLay = styled(motion.div)`
+    position:fixed;
+    top:0;
+    width:100%;
+    height:100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity:0;
 `;
 
 const MovieVariants = {
@@ -98,10 +108,15 @@ const SliderMovieInfo = styled(motion.div)`
     opacity:0;
     position:absolute;
     width:100%;
+    height:30px;
     bottom:0;
+    display:flex;
+    align-items: center; 
+    justify-content: center; 
     h4 {
         text-align:center;
-        font-size:14px;
+        font-size:12px;
+        margin:0;
     }
 `;
 
@@ -129,7 +144,7 @@ const rowVariants = {
 }
 
 //  한번에 보여줄 영화 개수
-const offset = 6;
+const offset = 5;
 
 function Home() {
     const {data, isLoading} = useQuery<IGetMoviesResult>(["movies", "nowPlaying"], getMovies);
@@ -150,6 +165,9 @@ function Home() {
     const toggleLeaving = () => setLeaving((prev) => !prev);
     const onMovieClicked = (movieId:number) => {
         history.push(`/movies/${movieId}`);
+    }
+    const onOverLayClicked = () => {
+        history.goBack();
     }
     return (
         <Wrapper>
@@ -199,7 +217,15 @@ function Home() {
                 </AnimatePresence>
             </Slider>
             <AnimatePresence>
-                {bigMovieMatch ? <motion.div layoutId={bigMovieMatch.params.movieId} style={{position:"absolute", width:"40vw", height:"80vh", backgroundColor:"red", top:10, left:0, right:0, margin:"0 auto"}} /> : null}
+                {bigMovieMatch ? (
+                <>
+                <OverLay onClick={onOverLayClicked} exit={{opacity:0}} animate={{opacity:1}}/>
+                <motion.div 
+                layoutId={bigMovieMatch.params.movieId} 
+                style={{position:"fixed", width:"60vw", height:"70vh", backgroundColor:"red", top:0, bottom:0, left:0, right:0, margin:"auto"}} 
+                />
+                </>
+            ) : null}
             </AnimatePresence>
         </>
         )}
