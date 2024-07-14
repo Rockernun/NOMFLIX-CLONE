@@ -66,7 +66,9 @@ const SliderMovie = styled(motion.div)<{bgphoto:string}>`
     background-image:url(${(props) => props.bgphoto});
     background-size:contain;
     background-position:center;
-    height:168px;
+    background-repeat: no-repeat;
+    height:0;
+    padding-bottom: 56.25%;
     color:red;
     font-size:64px;
     cursor:pointer; 
@@ -86,6 +88,43 @@ const OverLay = styled(motion.div)`
     height:100%;
     background-color: rgba(0, 0, 0, 0.5);
     opacity:0;
+`;
+
+const BigMovie = styled(motion.div)`
+    position:fixed; 
+    width:60vw; 
+    height:70vh;
+    background-color:${(props) => props.theme.black.lighter}; 
+    top:0;
+    bottom:0;
+    left:0;
+    right:0; 
+    border-radius:15px;
+    overflow:hidden;
+    margin:auto;
+`;
+
+const BigCover = styled.div`
+    width:100%;
+    height:400px;
+    background-size:cover;
+    background-position:center;
+`;
+
+const BigTitle = styled.h2`
+    color:${(props)=> props.theme.white.lighter};
+    padding:20px;
+    position:relative;
+    top:-80px;
+    text-align:center;
+    font-size:28px;
+`;
+
+const BigOverView = styled.p`
+    padding:20px;
+    position:relative;
+    top:-80px;
+    color: ${(props) => props.theme.white.lighter};
 `;
 
 const MovieVariants = {
@@ -163,12 +202,10 @@ function Home() {
         }
     };
     const toggleLeaving = () => setLeaving((prev) => !prev);
-    const onMovieClicked = (movieId:number) => {
-        history.push(`/movies/${movieId}`);
-    }
-    const onOverLayClicked = () => {
-        history.goBack();
-    }
+    const onMovieClicked = (movieId:number) => history.push(`/movies/${movieId}`);
+    const onOverLayClicked = () => history.goBack();
+    const clickedMovie = bigMovieMatch?.params.movieId && data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId!);
+    console.log(clickedMovie);
     return (
         <Wrapper>
             {isLoading ? (
@@ -220,10 +257,23 @@ function Home() {
                 {bigMovieMatch ? (
                 <>
                 <OverLay onClick={onOverLayClicked} exit={{opacity:0}} animate={{opacity:1}}/>
-                <motion.div 
-                layoutId={bigMovieMatch.params.movieId} 
-                style={{position:"fixed", width:"60vw", height:"70vh", backgroundColor:"red", top:0, bottom:0, left:0, right:0, margin:"auto"}} 
-                />
+                <BigMovie
+                layoutId={bigMovieMatch.params.movieId}>
+                    {clickedMovie && (
+                        <>
+                            <BigCover 
+                            style={{
+                                backgroundImage: `linear-gradient(to top, black,transparent), url(${makeImagePath(
+                                    clickedMovie.backdrop_path,
+                                    "w500"
+                                )})`
+                            }}
+                            />
+                            <BigTitle>{clickedMovie.title}</BigTitle>
+                            <BigOverView>{clickedMovie.overview}</BigOverView>
+                        </>
+                    )}
+                </BigMovie>
                 </>
             ) : null}
             </AnimatePresence>
