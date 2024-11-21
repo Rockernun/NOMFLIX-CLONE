@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "react-query";
-import { getMovies, IGetMoviesResult } from "../api";
+import {
+  getMovies,
+  getPopularMovies,
+  getTopRatedMovies,
+  getUpcomingMovies,
+  IGetMoviesResult,
+} from "../api";
 import { styled } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { makeImagePath } from "../utils";
@@ -8,7 +14,9 @@ import { useHistory, useRouteMatch } from "react-router-dom";
 
 const Wrapper = styled.div`
   background: black;
-  height: 200vh;
+  min-height: 400vh;
+  padding-bottom: 50px;
+  position: absolute;
 `;
 
 //  Loading State
@@ -19,7 +27,7 @@ const Loader = styled.div`
   align-items: center;
 `;
 
-//  First Movie(대형)
+//  Movie Banner
 const Banner = styled.div<{ bgphoto: string }>`
   height: 100vh;
   display: flex;
@@ -31,57 +39,71 @@ const Banner = styled.div<{ bgphoto: string }>`
   background-size: cover;
 `;
 
-//  First Movie Title
+//  Movie Title
 const Title = styled.h2`
   margin: 0;
   color: white;
   font-size: 68px;
 `;
 
-//  First Movie Overview
+//  Movie Overview
 const Overview = styled.p`
   color: white;
   font-size: 28px;
   width: 50%;
 `;
 
+//  Movie Slider Container
+const SliderContainer = styled.div`
+  position: relative;
+  top: -350px;
+  margin-top: 50px;
+  padding: 0 20px;
+  @media (max-width: 1200px) {
+    margin-top: 80px;
+  }
+  @media (max-width: 768px) {
+    margin-top: 60px;
+  }
+`;
+
 //  Movie Slider
 const Slider = styled(motion.div)`
   position: relative;
-  top: -200px;
+  margin-top: 20px;
+  overflow: hidden;
 `;
 
-//  Movie Slider Row(행)
+//  Movie Slider Row
 const SliderRow = styled(motion.div)`
   display: grid;
   gap: 5px;
   grid-template-columns: repeat(5, 1fr);
   margin-bottom: 5px;
-  position: absolute;
-  width: 100%;
+  position: relative;
+  width: calc(100% + 20px);
+  transform: translateX(-10px);
 `;
 
 //  Each Movie on Slider
 const SliderMovie = styled(motion.div)<{ bgphoto: string }>`
   background-color: white;
   background-image: url(${(props) => props.bgphoto});
-  background-size: contain;
+  background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   height: 0;
   padding-bottom: 56.25%;
   color: red;
   font-size: 64px;
   cursor: pointer;
-  &:first-child {
-    transform-origin: center left;
-  }
-  &:last-child {
-    transform-origin: center right;
+  transition: transform 0.3s ease-in-out;
+  &:hover {
+    transform: scale(1.1);
+    z-index: 1;
   }
 `;
 
-//  Overlay Movie
+// Overlay and Big Movie Components for Detail View
 const OverLay = styled(motion.div)`
   position: fixed;
   top: 0;
@@ -128,139 +150,130 @@ const BigOverView = styled.p`
   color: ${(props) => props.theme.white.lighter};
 `;
 
-const MovieVariants = {
-  normal: {
-    scale: 1,
-  },
-  hover: {
-    scale: 1.3,
-    y: -40,
-    transition: {
-      delay: 0.3,
-      duration: 0.3,
-      type: "tween",
-    },
-  },
-};
-
-const SliderMovieInfo = styled(motion.div)`
-  background-color: ${(props) => props.theme.black.lighter};
-  opacity: 0;
-  position: absolute;
-  width: 100%;
-  height: 30px;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  h4 {
-    text-align: center;
-    font-size: 12px;
-    margin: 0;
-  }
-`;
-
-const MovieInfoVariants = {
-  hover: {
-    opacity: 1,
-    transition: {
-      delay: 0.3,
-      duration: 0.3,
-      type: "tween,",
-    },
-  },
-};
-
-const rowVariants = {
-  hidden: {
-    x: window.outerWidth + 5,
-  },
-  visible: {
-    x: 0,
-  },
-  exit: {
-    x: -window.outerWidth - 5,
-  },
-};
-
-//  한번에 보여줄 영화 개수
 const offset = 5;
 
 function Home() {
-  const { data, isLoading } = useQuery<IGetMoviesResult>(
-    ["movies", "nowPlaying"],
-    getMovies
+  const { data: nowPlayingData, isLoading: nowPlayingLoading } =
+    useQuery<IGetMoviesResult>(["movies", "nowPlaying"], getMovies);
+  const { data: popularData } = useQuery<IGetMoviesResult>(
+    ["movies", "popular"],
+    getPopularMovies
   );
+  const { data: topRatedData } = useQuery<IGetMoviesResult>(
+    ["movies", "topRated"],
+    getTopRatedMovies
+  );
+  const { data: upcomingData } = useQuery<IGetMoviesResult>(
+    ["movies", "upcoming"],
+    getUpcomingMovies
+  );
+
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const history = useHistory();
-  const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId"); // 현재 URL에 매칭되는 영화 ID를 확인
-  console.log(bigMovieMatch); // 확인해보면 클릭한 영화 path, url, isExact 정보를 담은 객체를 반환
+  const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId");
+
+  const seenMovies = new Set<number>();
+
+  const filterUniqueMovies = (data?: IGetMoviesResult) => {
+    if (!data) return [];
+    return data.results.filter((movie) => {
+      if (seenMovies.has(movie.id)) {
+        return false;
+      } else {
+        seenMovies.add(movie.id);
+        return true;
+      }
+    });
+  };
+
   const increaseIndex = () => {
-    if (data) {
+    if (nowPlayingData) {
       if (leaving) return;
       toggleLeaving();
-      const totalMovies = data?.results.length - 1;
+      const totalMovies = nowPlayingData?.results.length - 1;
       const maxIndex = Math.floor(totalMovies / offset) - 1;
       setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
     }
   };
   const toggleLeaving = () => setLeaving((prev) => !prev);
   const onMovieClicked = (movieId: number) =>
-    history.push(`/movies/${movieId}`); // 사용자가 특정 영화를 클릭하면 영화 ID를 포함한 새로운 URL로 이동 (url이 bigMovieMatch에서 받아온 url과 동일 )
-
-  // 모달 배경 클릭 시 URL을 원래대로 되돌려 모달을 닫음
+    history.push(`/movies/${movieId}`);
   const onOverLayClicked = () => history.goBack();
-
-  // bigMovieMatch에서 가져온 movieId와 API에서 가져온 영화 데이터(data.results)를 비교하여 선택된 영화(clickedMovie)를 찾음
   const clickedMovie =
     bigMovieMatch?.params.movieId &&
-    data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId!);
+    (nowPlayingData?.results.find(
+      (movie) => movie.id === +bigMovieMatch.params.movieId!
+    ) ||
+      popularData?.results.find(
+        (movie) => movie.id === +bigMovieMatch.params.movieId!
+      ) ||
+      topRatedData?.results.find(
+        (movie) => movie.id === +bigMovieMatch.params.movieId!
+      ) ||
+      upcomingData?.results.find(
+        (movie) => movie.id === +bigMovieMatch.params.movieId!
+      ));
+
+  const renderSlider = (title: string, data?: IGetMoviesResult) => (
+    <SliderContainer>
+      <h2 style={{ color: "white", marginLeft: "20px" }}>{title}</h2>
+      <Slider>
+        <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
+          <SliderRow
+            key={index}
+            initial={{ x: window.outerWidth + 5 }}
+            animate={{ x: 0 }}
+            exit={{ x: -window.outerWidth - 5 }}
+            transition={{ type: "tween", duration: 1 }}
+          >
+            {filterUniqueMovies(data)
+              .slice(offset * index, offset * index + offset)
+              .map((movie) => (
+                <SliderMovie
+                  layoutId={movie.id + ""}
+                  key={movie.id}
+                  onClick={() => onMovieClicked(movie.id)}
+                  bgphoto={makeImagePath(movie.backdrop_path, "w500")}
+                >
+                  <h6
+                    style={{
+                      color: "white",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      fontSize: "24px",
+                    }}
+                  >
+                    {movie.title}
+                  </h6>
+                </SliderMovie>
+              ))}
+          </SliderRow>
+        </AnimatePresence>
+      </Slider>
+    </SliderContainer>
+  );
+
   return (
     <Wrapper>
-      {isLoading ? (
+      {nowPlayingLoading ? (
         <Loader>Loading...</Loader>
       ) : (
         <>
           <Banner
             onClick={increaseIndex}
-            bgphoto={makeImagePath(data?.results[0].backdrop_path || "")}
+            bgphoto={makeImagePath(
+              nowPlayingData?.results[0].backdrop_path || ""
+            )}
           >
-            <Title>{data?.results[0].title}</Title>
-            <Overview>{data?.results[0].overview}</Overview>
+            <Title>{nowPlayingData?.results[0].title}</Title>
+            <Overview>{nowPlayingData?.results[0].overview}</Overview>
           </Banner>
-          <Slider>
-            <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
-              <SliderRow
-                key={index}
-                variants={rowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ type: "tween", duration: 1 }}
-              >
-                {data?.results
-                  .slice(1)
-                  .slice(offset * index, offset * index + offset)
-                  .map((movie) => (
-                    <SliderMovie
-                      layoutId={movie.id + ""}
-                      key={movie.id}
-                      variants={MovieVariants}
-                      initial="normal"
-                      whileHover="hover"
-                      transition={{ type: "tween" }}
-                      onClick={() => onMovieClicked(movie.id)}
-                      bgphoto={makeImagePath(movie.backdrop_path, "w500")}
-                    >
-                      <SliderMovieInfo variants={MovieInfoVariants}>
-                        <h4>{movie.title}</h4>
-                      </SliderMovieInfo>
-                    </SliderMovie>
-                  ))}
-              </SliderRow>
-            </AnimatePresence>
-          </Slider>
+          {renderSlider("Now Playing", nowPlayingData)}
+          {renderSlider("Popular Movies", popularData)}
+          {renderSlider("Top Rated Movies", topRatedData)}
+          {renderSlider("Upcoming Movies", upcomingData)}
           <AnimatePresence>
             {bigMovieMatch ? (
               <>
@@ -269,7 +282,6 @@ function Home() {
                   exit={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 />
-                {/*Movie Modal*/}
                 <BigMovie layoutId={bigMovieMatch.params.movieId}>
                   {clickedMovie && (
                     <>
@@ -277,7 +289,7 @@ function Home() {
                         style={{
                           backgroundImage: `linear-gradient(to top, black,transparent), url(${makeImagePath(
                             clickedMovie.backdrop_path,
-                            "w500"
+                            "original"
                           )})`,
                         }}
                       />
