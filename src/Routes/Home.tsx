@@ -194,8 +194,8 @@ function Home() {
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const history = useHistory();
-  const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId");
-  console.log(bigMovieMatch);
+  const bigMovieMatch = useRouteMatch<{ movieId: string }>("/movies/:movieId"); // 현재 URL에 매칭되는 영화 ID를 확인
+  console.log(bigMovieMatch); // 확인해보면 클릭한 영화 path, url, isExact 정보를 담은 객체를 반환
   const increaseIndex = () => {
     if (data) {
       if (leaving) return;
@@ -207,12 +207,15 @@ function Home() {
   };
   const toggleLeaving = () => setLeaving((prev) => !prev);
   const onMovieClicked = (movieId: number) =>
-    history.push(`/movies/${movieId}`);
+    history.push(`/movies/${movieId}`); // 사용자가 특정 영화를 클릭하면 영화 ID를 포함한 새로운 URL로 이동 (url이 bigMovieMatch에서 받아온 url과 동일 )
+
+  // 모달 배경 클릭 시 URL을 원래대로 되돌려 모달을 닫음
   const onOverLayClicked = () => history.goBack();
+
+  // bigMovieMatch에서 가져온 movieId와 API에서 가져온 영화 데이터(data.results)를 비교하여 선택된 영화(clickedMovie)를 찾음
   const clickedMovie =
     bigMovieMatch?.params.movieId &&
     data?.results.find((movie) => movie.id === +bigMovieMatch.params.movieId!);
-  console.log(clickedMovie);
   return (
     <Wrapper>
       {isLoading ? (
@@ -266,6 +269,7 @@ function Home() {
                   exit={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 />
+                {/*Movie Modal*/}
                 <BigMovie layoutId={bigMovieMatch.params.movieId}>
                   {clickedMovie && (
                     <>
